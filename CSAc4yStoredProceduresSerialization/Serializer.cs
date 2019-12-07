@@ -10,7 +10,7 @@ namespace CSAc4yStoredProceduresSerialization
 {
     public class Serializer
     {
-        public string serialize(Object taroltEljaras, string fileName, Type anyType)
+        public string serialize(Object taroltEljaras, Type anyType, string path)
         {
             XmlSerializer serializer = new XmlSerializer(anyType);
             var xml = "";
@@ -23,7 +23,7 @@ namespace CSAc4yStoredProceduresSerialization
                     xml = writer.ToString(); // Your XML
                 }
             }
-            System.IO.File.WriteAllText("d:\\Server\\Visual_studio\\output_Xmls\\StorProcs\\" + fileName + ".xml", xml);
+            System.IO.File.WriteAllText(path, xml);
 
             return xml;
         }

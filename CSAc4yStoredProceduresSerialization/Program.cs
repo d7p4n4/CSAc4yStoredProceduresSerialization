@@ -90,68 +90,38 @@ namespace CSAc4yStoredProceduresSerialization
         }
         static void Main(string[] args)
         {
+            string taroltEljarasName = "";
 
-            Console.WriteLine("Hello World!");
             Program program = new Program();
             Serializer serializer = new Serializer();
-            
-            List<string> storedProceduresName = new List<string>();
-            List<TaroltEljaras> taroltEljarasLista = new List<TaroltEljaras>();
 
-            string queryString = "select SPECIFIC_NAME from information_schema.routines where routine_type = 'PROCEDURE' and(SPECIFIC_NAME like 'Ugy%')";
+            //Tárolt eljárás és argumentumai
+            GetTaroltEljarasokByName getTaroltEljarasokByName = new GetTaroltEljarasokByName(program.DatabaseConnection);
+            List<TaroltEljaras> taroltEljarasLista = getTaroltEljarasokByName.GetTaroltEljaras(taroltEljarasName);
 
-            using (SqlConnection connection = program.DatabaseConnection)
+
+            Console.WriteLine(">>SERIALIZE");
+
+            foreach (var taroltEljaras in taroltEljarasLista)
             {
-                SqlCommand command = new SqlCommand(
-                    queryString, connection);
-                //connection.Open();
-                using (SqlDataReader reader = command.ExecuteReader())
-                {
-                    Console.WriteLine(reader.FieldCount);
-                    while (reader.Read())
-                    {
-                        storedProceduresName.Add(reader[0].ToString());
-
-                    }
-                }
+                serializer.serialize(taroltEljaras, typeof(TaroltEljaras), "d:\\Server\\Visual_studio\\output_Xmls\\StorProcs\\" + taroltEljaras.Megnevezes + ".xml");
             }
 
-            foreach (var storProc in storedProceduresName)
+            //Tábla és oszlopai
+
+            string name = "tblParBank";
+            GetTablaByName getTablaByName = new GetTablaByName(program.DatabaseConnection);
+            List<Tabla> tablaLista = getTablaByName.GetTablaListByName(name);
+
+
+            Console.WriteLine(">>SERIALIZE");
+
+            foreach (var tabla in tablaLista)
             {
-                TaroltEljaras taroltEljaras = new TaroltEljaras();
-                taroltEljaras.Megnevezes = storProc;
-                taroltEljaras.ArgumentumLista = (program.GetParameters(storProc));
-
-                taroltEljarasLista.Add(taroltEljaras);
+                serializer.serialize(tabla, typeof(Tabla), "d:\\Server\\Visual_studio\\output_Xmls\\arntesztTablak\\" + tabla.Megnevezes + ".xml");
             }
-
-            foreach(var TE in taroltEljarasLista)
-            {
-                serializer.serialize(TE, TE.Megnevezes, typeof(TaroltEljaras));
-            }
-
         }
 
-        public List<TaroltEljarasArgumentum> GetParameters(string name)
-        {
-            Program program = new Program();
-            List<TaroltEljarasArgumentum> lista = new List<TaroltEljarasArgumentum>();
-            SqlConnection connection = program.DatabaseConnection;
-            SqlCommand cmd = new SqlCommand(name, connection);
-            cmd.CommandType = CommandType.StoredProcedure;
-            //connection.Open();
-            SqlCommandBuilder.DeriveParameters(cmd);
-            foreach (SqlParameter p in cmd.Parameters)
-            {
-                TaroltEljarasArgumentum taroltEljarasArgumentum = new TaroltEljarasArgumentum();
-                taroltEljarasArgumentum.BelsoNev = p.ParameterName;
-                taroltEljarasArgumentum.Adattipus = p.SqlDbType.ToString();
-                taroltEljarasArgumentum.Iranya = p.Direction.ToString();
-                lista.Add(taroltEljarasArgumentum);
 
-            }
-
-            return lista;
-        }
     }
 }
